@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clay Smash!</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0d8a8;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            border: 4px solid #3c2c1e;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        #game-canvas {
+            background-color: #e0d9ca;
+        }
+        
+        #game-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #game-background .logo {
+            width: 200px;
+            height: 200px;
+            background-color: #3c2c1e;
+            -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M12.5 30C12.5 30 30 40 50 40C70 40 87.5 30 87.5 30M12.5 70C12.5 70 30 60 50 60C70 60 87.5 70 87.5 70M25 50C25 41.7 31.7 35 40 35M75 50C75 41.7 68.3 35 60 35M25 50C25 58.3 31.7 65 40 65M75 50C75 58.3 68.3 65 60 65"/></svg>') center/contain no-repeat;
+            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M12.5 30C12.5 30 30 40 50 40C70 40 87.5 30 87.5 30M12.5 70C12.5 70 30 60 50 60C70 60 87.5 70 87.5 70M25 50C25 41.7 31.7 35 40 35M75 50C75 41.7 68.3 35 60 35M25 50C25 58.3 31.7 65 40 65M75 50C75 58.3 68.3 65 60 65"/></svg>') center/contain no-repeat;
+        }
+        
+        #game-background .text {
+            color: #3c2c1e;
+            font-size: 40px;
+            font-weight: bold;
+            margin-top: 20px;
+            opacity: 0.7;
+        }
+        
+        #ui-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            color: #3c2c1e;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 1px 1px 0 #fff;
+        }
+        
+        #health-container {
+            position: absolute;
+            top: 50px;
+            left: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        #health-bar {
+            width: 150px;
+            height: 20px;
+            background-color: #e74c3c;
+            border: 2px solid #3c2c1e;
+            border-radius: 10px;
+            margin-left: 10px;
+            overflow: hidden;
+        }
+        
+        #health-fill {
+            height: 100%;
+            background-color: #2ecc71;
+            width: 100%;
+            transition: width 0.3s;
+        }
+        
+        #points-target {
+            position: absolute;
+            top: 90px;
+            left: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #3c2c1e;
+            text-shadow: 1px 1px 0 #fff;
+            padding: 5px 10px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+        }
+        
+        #start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            z-index: 10;
+        }
+        
+        #start-screen h1 {
+            font-size: 60px;
+            color: #f4a742;
+            text-shadow: 3px 3px 0 #3c2c1e;
+            margin-bottom: 20px;
+        }
+        
+        #start-screen p {
+            font-size: 20px;
+            margin: 10px 0;
+            text-align: center;
+            max-width: 600px;
+        }
+        
+        #start-screen button {
+            margin-top: 30px;
+            padding: 15px 40px;
+            font-size: 24px;
+            background-color: #d35400;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        
+        #start-screen button:hover {
+            transform: scale(1.05);
+            background-color: #e67e22;
+        }
+        
+        #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            z-index: 10;
+        }
+        
+        #game-over h2 {
+            font-size: 50px;
+            color: #e74c3c;
+            text-shadow: 3px 3px 0 #3c2c1e;
+            margin-bottom: 20px;
+        }
+        
+        #game-over p {
+            font-size: 24px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        #game-over button {
+            margin-top: 30px;
+            padding: 15px 40px;
+            font-size: 24px;
+            background-color: #d35400;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        
+        #game-over button:hover {
+            transform: scale(1.05);
+            background-color: #e67e22;
+        }
+        
+        #combo-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            font-weight: bold;
+            color: #e74c3c;
+            text-shadow: 2px 2px 0 #fff;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        .level-up {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 50px;
+            font-weight: bold;
+            color: #2ecc71;
+            text-shadow: 2px 2px 0 #fff;
+            opacity: 0;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas" width="800" height="600"></canvas>
+        <div id="game-background">
+            <div class="logo"></div>
+            <div class="text">SEISMIC</div>
+        </div>
+        <div id="ui-container">
+            <div id="score">Score: 0</div>
+            <div id="level">Level: 1</div>
+            <div id="timer">Time: 60</div>
+        </div>
+        <div id="health-container">
+            <span>Health:</span>
+            <div id="health-bar">
+                <div id="health-fill"></div>
+            </div>
+        </div>
+        <div id="turns-container">
+            <span>Turns:</span>
+            <div class="turn-indicator"></div>
+            <div class="turn-indicator"></div>
+            <div class="turn-indicator"></div>
+        </div>
+        <div id="points-target">
+            <span>Target: 200</span>
+        </div>
+        <div id="combo-indicator">COMBO x2!</div>
+        <div id="start-screen">
+            <h1>Clay Smash!</h1>
+            <p>Help the earth golem smash obstacles before they hit him!</p>
+            <p>Controls: ← → arrow keys to move, Q/W to punch left or right</p>
+            <p>Score at least 200 points to advance to the next round!</p>
+            <p>Avoid bombs! Collect gold for bonus points! Water slows down time!</p>
+            <button id="start-button">START GAME</button>
+        </div>
+        <div id="game-over">
+            <h2>GAME OVER</h2>
+            <p>Your Score: <span id="final-score">0</span></p>
+            <p>Level Reached: <span id="final-level">1</span></p>
+            <p>Round Reached: <span id="final-round">1</span></p>
+            <p>Turns Used: <span id="final-turns">1</span>/3</p>
+            <button id="restart-button">PLAY AGAIN</button>
+        </div>
+    </div>
+    
+    <script>
+        // Game constants
+        const GOLEM_WIDTH = 100;
+        const GOLEM_HEIGHT = 150;
+        const OBSTACLE_SPEED_INITIAL = 3;
+        const OBSTACLE_SPAWN_RATE_INITIAL = 1500; // milliseconds
+        const GAME_DURATION_INITIAL = 60; // seconds
+        const MAX_TURNS = 3;
+        const POINTS_TARGET_INITIAL = 200; // Points needed to pass round 1
+        const POINTS_TARGET_MULTIPLIER = 1.5; // Each round needs 1.5x more points
+        const SPEED_INCREASE_FACTOR = 1.2; // Each round is 1.2x faster
+        const TIME_INCREASE_FACTOR = 1.2; // Each round has 1.2x more time
+        
+        // Game variables
+        let canvas, ctx;
+        let golem, obstacles = [];
+        let score = 0;
+        let level = 1;
+        let combo = 0;
+        let comboTimer = 0;
+        let gameTime = GAME_DURATION_INITIAL;
+        let gameActive = false;
+        let obstacleSpeed = OBSTACLE_SPEED_INITIAL;
+        let obstacleSpawnRate = OBSTACLE_SPAWN_RATE_INITIAL;
+        let spawnInterval;
+        let gameInterval;
+        let timerInterval;
+        let isSlowMotion = false;
+        let slowMotionTimer = 0;
+        let lastFrameTime = 0;
+        let currentTurn = 1;
+        let roundOver = false;
+        let round = 1;
+        let pointsTarget = POINTS_TARGET_INITIAL;
+        
+        // DOM Elements
+        const scoreElement = document.getElementById('score');
+        const levelElement = document.getElementById('level');
+        const timerElement = document.getElementById('timer');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over');
+        const finalScoreElement = document.getElementById('final-score');
+        const finalLevelElement = document.getElementById('final-level');
+        const finalTurnsElement = document.getElementById('final-turns');
+        const startButton = document.getElementById('start-button');
+        const restartButton = document.getElementById('restart-button');
+        const comboIndicator = document.getElementById('combo-indicator');
+        const healthFill = document.getElementById('health-fill');
+        const turnIndicators = document.querySelectorAll('.turn-indicator');
+        const pointsTargetElement = document.getElementById('points-target');
+        
+        // Set up canvas
+        canvas = document.getElementById('game-canvas');
+        ctx = canvas.getContext('2d');
+        
+        // Game objects
+        class Golem {
+            constructor() {
+                this.x = canvas.width / 2 - GOLEM_WIDTH / 2;
+                this.y = canvas.height - GOLEM_HEIGHT - 20;
+                this.width = GOLEM_WIDTH;
+                this.height = GOLEM_HEIGHT;
+                this.punchingLeft = false;
+                this.punchingRight = false;
+                this.punchTimer = 0;
+                this.punchDuration = 15; // frames
+                this.health = 3;
+                this.invulnerable = false;
+                this.invulnerableTimer = 0;
+                this.speed = 5;
+                this.movingLeft = false;
+                this.movingRight = false;
+            }
+            
+            draw() {
+                // Draw golem body (orange with black outline)
+                ctx.fillStyle = '#d35400';
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 3;
+                
+                // Draw body
+                ctx.beginPath();
+                ctx.roundRect(this.x + 20, this.y + 40, 60, 70, 5);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw head
+                ctx.beginPath();
+                ctx.fillStyle = '#e6b566';
+                ctx.moveTo(this.x + 30, this.y + 10);
+                ctx.lineTo(this.x + 70, this.y + 10);
+                ctx.lineTo(this.x + 70, this.y + 40);
+                ctx.lineTo(this.x + 30, this.y + 40);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw face dots
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(this.x + 40, this.y + 20, 3, 0, Math.PI * 2);
+                ctx.arc(this.x + 60, this.y + 20, 3, 0, Math.PI * 2);
+                ctx.arc(this.x + 40, this.y + 30, 3, 0, Math.PI * 2);
+                ctx.arc(this.x + 60, this.y + 30, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw legs
+                ctx.fillStyle = '#d35400';
+                // Left leg
+                ctx.beginPath();
+                ctx.roundRect(this.x + 25, this.y + 110, 20, 40, 5);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Right leg
+                ctx.beginPath();
+                ctx.roundRect(this.x + 55, this.y + 110, 20, 40, 5);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw arms based on punching state
+                // Left arm
+                ctx.beginPath();
+                if (this.punchingLeft) {
+                    // Extended punch
+                    ctx.roundRect(this.x - 30, this.y + 50, 50, 20, 5);
+                } else {
+                    ctx.roundRect(this.x, this.y + 50, 20, 20, 5);
+                }
+                ctx.fill();
+                ctx.stroke();
+                
+                // Right arm
+                ctx.beginPath();
+                if (this.punchingRight) {
+                    // Extended punch
+                    ctx.roundRect(this.x + 80, this.y + 50, 50, 20, 5);
+                } else {
+                    ctx.roundRect(this.x + 80, this.y + 50, 20, 20, 5);
+                }
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw fists
+                ctx.beginPath();
+                if (this.punchingLeft) {
+                    ctx.roundRect(this.x - 40, this.y + 45, 25, 30, 5);
+                } else {
+                    ctx.roundRect(this.x - 5, this.y + 45, 25, 30, 5);
+                }
+                ctx.fill();
+                ctx.stroke();
+                
+                ctx.beginPath();
+                if (this.punchingRight) {
+                    ctx.roundRect(this.x + 115, this.y + 45, 25, 30, 5);
+                } else {
+                    ctx.roundRect(this.x + 80, this.y + 45, 25, 30, 5);
+                }
+                ctx.fill();
+                ctx.stroke();
+                
+                // Flashing effect when invulnerable
+                if (this.invulnerable && Math.floor(Date.now() / 100) % 2 === 0) {
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                }
+            }
+            
+            update() {
+                // Update punch state
+                if (this.punchingLeft || this.punchingRight) {
+                    this.punchTimer++;
+                    if (this.punchTimer >= this.punchDuration) {
+                        this.punchingLeft = false;
+                        this.punchingRight = false;
+                        this.punchTimer = 0;
+                    }
+                }
+                
+                // Update invulnerability
+                if (this.invulnerable) {
+                    this.invulnerableTimer++;
+                    if (this.invulnerableTimer >= 60) { // 1 second of invulnerability
+                        this.invulnerable = false;
+                        this.invulnerableTimer = 0;
+                    }
+                }
+                
+                // Update movement
+                if (this.movingLeft) {
+                    this.x -= this.speed;
+                    // Prevent going off screen
+                    if (this.x < 0) {
+                        this.x = 0;
+                    }
+                }
+                
+                if (this.movingRight) {
+                    this.x += this.speed;
+                    // Prevent going off screen
+                    if (this.x + this.width > canvas.width) {
+                        this.x = canvas.width - this.width;
+                    }
+                }
+            }
+            
+            punchLeft() {
+                if (!this.punchingLeft && !this.punchingRight) {
+                    this.punchingLeft = true;
+                    this.punchTimer = 0;
+                }
+            }
+            
+            punchRight() {
+                if (!this.punchingLeft && !this.punchingRight) {
+                    this.punchingRight = true;
+                    this.punchTimer = 0;
+                }
+            }
+            
+            getLeftPunchBox() {
+                if (this.punchingLeft) {
+                    return {
+                        x: this.x - 40,
+                        y: this.y + 45,
+                        width: 40,
+                        height: 30
+                    };
+                }
+                return null;
+            }
+            
+            getRightPunchBox() {
+                if (this.punchingRight) {
+                    return {
+                        x: this.x + 100,
+                        y: this.y + 45,
+                        width: 40,
+                        height: 30
+                    };
+                }
+                return null;
+            }
+            
+            takeDamage() {
+                if (!this.invulnerable) {
+                    this.health--;
+                    this.invulnerable = true;
+                    this.invulnerableTimer = 0;
+                    combo = 0;
+                    updateComboDisplay();
+                    
+                    // Update health bar
+                    updateHealthBar();
+                    
+                    // Shake effect
+                    const container = document.getElementById('game-container');
+                    container.style.transform = 'translateX(5px)';
+                    setTimeout(() => {
+                        container.style.transform = 'translateX(-5px)';
+                        setTimeout(() => {
+                            container.style.transform = 'translateX(0)';
+                        }, 50);
+                    }, 50);
+                    
+                    // Check if health is zero to potentially end turn
+                    if (this.health <= 0) {
+                        endTurn();
+                    }
+                    
+                    return true;
+                }
+                return false;
+            }
+        }
+        
+        class Obstacle {
+            constructor(type) {
+                this.width = 40;
+                this.height = 40;
+                this.x = Math.random() * (canvas.width - this.width);
+                this.y = -this.height;
+                this.type = type || this.getRandomType();
+                this.speed = obstacleSpeed;
+                this.hit = false;
+                this.destroyed = false;
+                this.destroyAnimation = 0;
+                this.rotation = 0;
+                this.rotationSpeed = Math.random() * 0.1 - 0.05;
+            }
+            
+            getRandomType() {
+                const rand = Math.random();
+                if (rand < 0.05) return 'bomb';
+                if (rand < 0.15) return 'gold';
+                if (rand < 0.25) return 'water';
+                
+                const types = ['stone', 'brick', 'box'];
+                return types[Math.floor(Math.random() * types.length)];
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+                ctx.rotate(this.rotation);
+                
+                if (this.hit) {
+                    // Draw destruction animation
+                    ctx.globalAlpha = 1 - this.destroyAnimation / 10;
+                    ctx.fillStyle = this.getTypeColor();
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.width / 2 * (1 - this.destroyAnimation / 10), 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Particles
+                    const particleCount = 5;
+                    for (let i = 0; i < particleCount; i++) {
+                        const angle = (i / particleCount) * Math.PI * 2;
+                        const distance = this.destroyAnimation * 3;
+                        const x = Math.cos(angle) * distance;
+                        const y = Math.sin(angle) * distance;
+                        
+                        ctx.beginPath();
+                        ctx.arc(x, y, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                } else {
+                    // Draw regular obstacle based on type
+                    switch (this.type) {
+                        case 'stone':
+                            ctx.fillStyle = '#7f8c8d';
+                            ctx.strokeStyle = '#2c3e50';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.arc(0, 0, this.width / 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.stroke();
+                            break;
+                            
+                        case 'brick':
+                            ctx.fillStyle = '#c0392b';
+                            ctx.strokeStyle = '#7f8c8d';
+                            ctx.lineWidth = 2;
+                            ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+                            ctx.strokeRect(-this.width / 2, -this.height / 2, this.width, this.height);
+                            
+                            // Brick details
+                            ctx.beginPath();
+                            ctx.moveTo(-this.width / 2, 0);
+                            ctx.lineTo(this.width / 2, 0);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(0, -this.height / 2);
+                            ctx.lineTo(0, this.height / 2);
+                            ctx.stroke();
+                            break;
+                            
+                        case 'box':
+                            ctx.fillStyle = '#f39c12';
+                            ctx.strokeStyle = '#34495e';
+                            ctx.lineWidth = 2;
+                            ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+                            ctx.strokeRect(-this.width / 2, -this.height / 2, this.width, this.height);
+                            
+                            // Box details
+                            ctx.beginPath();
+                            ctx.moveTo(-this.width / 2, -this.height / 2);
+                            ctx.lineTo(this.width / 2, this.height / 2);
+                            ctx.stroke();
+                            ctx.beginPath();
+                            ctx.moveTo(this.width / 2, -this.height / 2);
+                            ctx.lineTo(-this.width / 2, this.height / 2);
+                            ctx.stroke();
+                            break;
+                            
+                        case 'bomb':
+                            // Draw bomb
+                            ctx.fillStyle = '#34495e';
+                            ctx.strokeStyle = '#2c3e50';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.arc(0, 0, this.width / 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.stroke();
+                            
+                            // Draw fuse
+                            ctx.beginPath();
+                            ctx.moveTo(0, -this.width / 2);
+                            ctx.quadraticCurveTo(10, -this.width / 2 - 10, 15, -this.width / 2 - 5);
+                            ctx.stroke();
+                            
+                            // Draw spark
+                            if (Math.random() > 0.5) {
+                                ctx.fillStyle = 'yellow';
+                                ctx.beginPath();
+                                ctx.arc(15, -this.width / 2 - 5, 3, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                            break;
+                            
+                        case 'gold':
+                            ctx.fillStyle = '#f1c40f';
+                            ctx.strokeStyle = '#f39c12';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.arc(0, 0, this.width / 2, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.stroke();
+                            
+                            // Add shine effect
+                            ctx.fillStyle = 'white';
+                            ctx.beginPath();
+                            ctx.arc(-5, -5, 5, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+                            
+                        case 'water':
+                            ctx.fillStyle = 'rgba(52, 152, 219, 0.7)';
+                            ctx.strokeStyle = '#2980b9';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            
+                            // Create a water drop shape
+                            ctx.moveTo(0, -this.height / 2);
+                            ctx.bezierCurveTo(
+                                this.width / 2, -this.height / 3,
+                                this.width / 2, this.height / 3,
+                                0, this.height / 2
+                            );
+                            ctx.bezierCurveTo(
+                                -this.width / 2, this.height / 3,
+                                -this.width / 2, -this.height / 3,
+                                0, -this.height / 2
+                            );
+                            
+                            ctx.fill();
+                            ctx.stroke();
+                            
+                            // Water details
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                            ctx.beginPath();
+                            ctx.arc(-5, -5, 5, 0, Math.PI * 2);
+                            ctx.fill();
+                            break;
+                    }
+                }
+                
+                ctx.restore();
+            }
+            
+            update(deltaTime) {
+                const speedMultiplier = isSlowMotion ? 0.5 : 1;
+                
+                if (this.hit) {
+                    this.destroyAnimation += 0.5;
+                    if (this.destroyAnimation >= 10) {
+                        this.destroyed = true;
+                    }
+                    return;
+                }
+                
+                this.y += this.speed * speedMultiplier * deltaTime;
+                this.rotation += this.rotationSpeed * speedMultiplier * deltaTime;
+                
+                // Check if obstacle hit the ground
+                if (this.y > canvas.height) {
+                    this.destroyed = true;
+                    return;
+                }
+                
+                // Check collision with golem if not already hit
+                if (!this.hit && this.checkGolemCollision()) {
+                    this.handleCollision();
+                }
+            }
+            
+            checkGolemCollision() {
+                // Check for collision with golem's head area
+                const golemHeadBox = {
+                    x: golem.x + 30,
+                    y: golem.y + 10,
+                    width: 40,
+                    height: 30
+                };
+                
+                // Check for collision with punches
+                const leftPunchBox = golem.getLeftPunchBox();
+                const rightPunchBox = golem.getRightPunchBox();
+                
+                if (leftPunchBox && this.intersects(leftPunchBox)) {
+                    this.hit = true;
+                    this.handleDestruction('left');
+                    return false; // No golem collision, punch handled it
+                }
+                
+                if (rightPunchBox && this.intersects(rightPunchBox)) {
+                    this.hit = true;
+                    this.handleDestruction('right');
+                    return false; // No golem collision, punch handled it
+                }
+                
+                // Check for collision with golem's head
+                return this.intersects(golemHeadBox);
+            }
+            
+            intersects(box) {
+                return (
+                    this.x < box.x + box.width &&
+                    this.x + this.width > box.x &&
+                    this.y < box.y + box.height &&
+                    this.y + this.height > box.y
+                );
+            }
+            
+            handleCollision() {
+                // Handle collision with golem
+                switch (this.type) {
+                    case 'bomb':
+                        if (golem.takeDamage()) {
+                            // Create explosion effect
+                            createExplosion(this.x + this.width / 2, this.y + this.height / 2);
+                            this.hit = true;
+                        }
+                        break;
+                        
+                    case 'gold':
+                        // Gold doesn't hurt, just gives points
+                        this.hit = true;
+                        score += 50;
+                        updateScore();
+                        break;
+                        
+                    case 'water':
+                        // Activate slow motion
+                        this.hit = true;
+                        isSlowMotion = true;
+                        slowMotionTimer = 300; // ~5 seconds at 60fps
+                        break;
+                        
+                    default:
+                        // Regular obstacles damage the golem
+                        if (golem.takeDamage()) {
+                            this.hit = true;
+                        }
+                        break;
+                }
+            }
+            
+            handleDestruction(direction) {
+                switch (this.type) {
+                    case 'bomb':
+                        // If bomb is hit, it explodes and damages golem
+                        createExplosion(this.x + this.width / 2, this.y + this.height / 2);
+                        golem.takeDamage();
+                        break;
+                        
+                    case 'gold':
+                        // Bonus points for gold
+                        score += 100;
+                        createScorePopup(this.x, this.y, '+100', '#f1c40f');
+                        break;
+                        
+                    case 'water':
+                        // Activate slow motion
+                        isSlowMotion = true;
+                        slowMotionTimer = 300; // ~5 seconds at 60fps
+                        break;
+                        
+                    default:
+                        // Regular obstacles give points based on combo
+                        combo++;
+                        const comboMultiplier = Math.min(Math.floor(combo / 3) + 1, 5);
+                        const pointsEarned = 10 * comboMultiplier;
+                        score += pointsEarned;
+                        
+                        // Show combo
+                        updateComboDisplay();
+                        
+                        // Create score popup
+                        createScorePopup(this.x, this.y, `+${pointsEarned}`, '#2ecc71');
+                        
+                        // Reset combo timer
+                        comboTimer = 120; // 2 seconds at 60fps
+                        break;
+                }
+                
+                // Update score display
+                updateScore();
+                
+                // Knockback effect
+                if (direction === 'left') {
+                    this.x -= 5;
+                } else {
+                    this.x += 5;
+                }
+            }
+            
+            getTypeColor() {
+                switch (this.type) {
+                    case 'stone': return '#7f8c8d';
+                    case 'brick': return '#c0392b';
+                    case 'box': return '#f39c12';
+                    case 'bomb': return '#34495e';
+                    case 'gold': return '#f1c40f';
+                    case 'water': return '#3498db';
+                    default: return '#7f8c8d';
+                }
+            }
+        }
+        
+        class ScorePopup {
+            constructor(x, y, text, color) {
+                this.x = x;
+                this.y = y;
+                this.text = text;
+                this.color = color || '#2ecc71';
+                this.life = 0;
+                this.maxLife = 40; // frames
+            }
+            
+            update() {
+                this.y -= 1;
+                this.life++;
+                return this.life < this.maxLife;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = 1 - (this.life / this.maxLife);
+                ctx.fillStyle = this.color;
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.strokeText(this.text, this.x, this.y);
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+        }
+        
+        class Explosion {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 5;
+                this.maxRadius = 50;
+                this.life = 0;
+                this.maxLife = 20; // frames
+            }
+            
+            update() {
+                this.life++;
+                this.radius = (this.life / this.maxLife) * this.maxRadius;
+                return this.life < this.maxLife;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = 1 - (this.life / this.maxLife);
+                
+                // Draw explosion
+                const gradient = ctx.createRadialGradient(
+                    this.x, this.y, 0,
+                    this.x, this.y, this.radius
+                );
+                gradient.addColorStop(0, '#f39c12');
+                gradient.addColorStop(0.5, '#e74c3c');
+                gradient.addColorStop(1, 'rgba(231, 76, 60, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+        
+        // Game utility variables
+        let scorePopups = [];
+        let explosions = [];
+        
+        // Background elements
+        const grass = [];
+        
+        function initGrass() {
+            for (let i = 0; i < 20; i++) {
+                grass.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height - 10 - Math.random() * 5,
+                    width: 10 + Math.random() * 10,
+                    height: 10 + Math.random() * 15
+                });
+            }
+        }
+        
+        function drawBackground() {
+            // Draw ground
+            ctx.fillStyle = '#d9b38c';
+            ctx.fillRect(0, canvas.height - 30, canvas.width, 30);
+            
+            // Draw grass
+            ctx.fillStyle = '#27ae60';
+            for (const g of grass) {
+                ctx.beginPath();
+                ctx.moveTo(g.x, g.y);
+                ctx.lineTo(g.x + g.width / 2, g.y - g.height);
+                ctx.lineTo(g.x + g.width, g.y);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+        
+        // Utility functions
+        function createScorePopup(x, y, text, color) {
+            scorePopups.push(new ScorePopup(x, y, text, color));
+        }
+        
+        function createExplosion(x, y) {
+            explosions.push(new Explosion(x, y));
+        }
+        
+        function updateHealthBar() {
+            const healthPercentage = (golem.health / 3) * 100;
+            healthFill.style.width = `${healthPercentage}%`;
+            
+            // Change color based on health
+            if (healthPercentage > 66) {
+                healthFill.style.backgroundColor = '#2ecc71'; // Green
+            } else if (healthPercentage > 33) {
+                healthFill.style.backgroundColor = '#f39c12'; // Orange
+            } else {
+                healthFill.style.backgroundColor = '#e74c3c'; // Red
+            }
+        }
+        
+        function updateTurnIndicators() {
+            for (let i = 0; i < turnIndicators.length; i++) {
+                if (i < currentTurn - 1) {
+                    turnIndicators[i].classList.add('turn-used');
+                } else {
+                    turnIndicators[i].classList.remove('turn-used');
+                }
+            }
+        }
+        
+        function updateComboDisplay() {
+            if (combo >= 3) {
+                const multiplier = Math.min(Math.floor(combo / 3) + 1, 5);
+                comboIndicator.textContent = `COMBO x${multiplier}!`;
+                comboIndicator.style.opacity = '1';
+                comboIndicator.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                
+                setTimeout(() => {
+                    comboIndicator.style.opacity = '0';
+                    comboIndicator.style.transform = 'translate(-50%, -50%) scale(1)';
+                }, 500);
+            } else {
+                comboIndicator.style.opacity = '0';
+            }
+        }
+        
+        function showLevelUp() {
+            const levelUpText = document.createElement('div');
+            levelUpText.className = 'level-up';
+            levelUpText.textContent = `LEVEL ${level}!`;
+            document.getElementById('game-container').appendChild(levelUpText);
+            
+            // Animate
+            setTimeout(() => {
+                levelUpText.style.opacity = '1';
+                levelUpText.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                
+                setTimeout(() => {
+                    levelUpText.style.opacity = '0';
+                    levelUpText.style.transform = 'translate(-50%, -100%) scale(1)';
+                    
+                    setTimeout(() => {
+                        levelUpText.remove();
+                    }, 500);
+                }, 1000);
+            }, 10);
+        }
+        
+        function endTurn() {
+            if (currentTurn < MAX_TURNS) {
+                // Stop gameplay temporarily
+                gameActive = false;
+                
+                // Check if player has reached the points target
+                if (score >= pointsTarget) {
+                    advanceToNextRound();
+                    return;
+                }
+                
+                // Display turn over message
+                const turnOverText = document.createElement('div');
+                turnOverText.className = 'level-up';
+                turnOverText.style.color = '#e74c3c';
+                turnOverText.textContent = `TURN ${currentTurn} OVER!`;
+                document.getElementById('game-container').appendChild(turnOverText);
+                
+                // Animate
+                setTimeout(() => {
+                    turnOverText.style.opacity = '1';
+                    turnOverText.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                    
+                    // Wait 2 seconds before starting next turn
+                    setTimeout(() => {
+                        turnOverText.style.opacity = '0';
+                        turnOverText.style.transform = 'translate(-50%, -100%) scale(1)';
+                        
+                        setTimeout(() => {
+                            turnOverText.remove();
+                            startNextTurn();
+                        }, 500);
+                    }, 2000);
+                }, 10);
+            } else {
+                // All turns used, game over
+                endGame();
+            }
+        }
+        
+        function advanceToNextRound() {
+            // Stop gameplay temporarily
+            gameActive = false;
+            
+            // Display round complete message
+            const roundCompleteText = document.createElement('div');
+            roundCompleteText.className = 'level-up';
+            roundCompleteText.style.color = '#27ae60';
+            roundCompleteText.textContent = `ROUND ${round} COMPLETE!`;
+            document.getElementById('game-container').appendChild(roundCompleteText);
+            
+            // Animate
+            setTimeout(() => {
+                roundCompleteText.style.opacity = '1';
+                roundCompleteText.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                
+                // Wait 2 seconds before starting next round
+                setTimeout(() => {
+                    roundCompleteText.style.opacity = '0';
+                    roundCompleteText.style.transform = 'translate(-50%, -100%) scale(1)';
+                    
+                    setTimeout(() => {
+                        roundCompleteText.remove();
+                        startNextRound();
+                    }, 500);
+                }, 2000);
+            }, 10);
+        }
+        
+        function startNextRound() {
+            // Advance to next round
+            round++;
+            
+            // Reset turns
+            currentTurn = 1;
+            updateTurnIndicators();
+            
+            // Increase difficulty
+            pointsTarget = Math.floor(POINTS_TARGET_INITIAL * Math.pow(POINTS_TARGET_MULTIPLIER, round - 1));
+            obstacleSpeed = OBSTACLE_SPEED_INITIAL * Math.pow(SPEED_INCREASE_FACTOR, round - 1);
+            obstacleSpawnRate = Math.max(OBSTACLE_SPAWN_RATE_INITIAL / Math.pow(SPEED_INCREASE_FACTOR, round - 1), 300);
+            gameTime = Math.floor(GAME_DURATION_INITIAL * Math.pow(TIME_INCREASE_FACTOR, round - 1));
+            
+            // Update UI
+            updatePointsTarget();
+            timerElement.textContent = `Time: ${gameTime}`;
+            
+            // Reset golem health
+            golem.health = 3;
+            updateHealthBar();
+            
+            // Clear obstacles
+            obstacles = [];
+            
+            // Resume gameplay
+            gameActive = true;
+            
+            // Update spawn interval
+            clearInterval(spawnInterval);
+            spawnInterval = setInterval(spawnObstacle, obstacleSpawnRate);
+            
+            // Restart timer
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (gameTime > 0 && gameActive) {
+                    gameTime--;
+                    timerElement.textContent = `Time: ${gameTime}`;
+                    
+                    if (gameTime === 0) {
+                        endTurn();
+                    }
+                }
+            }, 1000);
+            
+            // Resume game loop
+            lastFrameTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function updatePointsTarget() {
+            pointsTargetElement.innerHTML = `<span>Target: ${pointsTarget}</span>`;
+        }
+        
+        function startNextTurn() {
+            // Advance to next turn
+            currentTurn++;
+            
+            // Update turn indicators
+            updateTurnIndicators();
+            
+            // Reset golem health
+            golem.health = 3;
+            updateHealthBar();
+            
+            // Clear obstacles
+            obstacles = [];
+            
+            // Resume gameplay
+            gameActive = true;
+            
+            // Resume game loop
+            lastFrameTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function spawnObstacle() {
+            if (!gameActive) return;
+            
+            obstacles.push(new Obstacle());
+        }
+        
+        // Game events and controls
+        function handleKeyDown(e) {
+            if (!gameActive) return;
+            
+            switch (e.key) {
+                case 'q':
+                case 'Q':
+                    golem.punchLeft();
+                    break;
+                    
+                case 'w':
+                case 'W':
+                    golem.punchRight();
+                    break;
+                    
+                case 'ArrowLeft':
+                    golem.movingLeft = true;
+                    break;
+                    
+                case 'ArrowRight':
+                    golem.movingRight = true;
+                    break;
+            }
+        }
+        
+        function handleKeyUp(e) {
+            if (!gameActive) return;
+            
+            switch (e.key) {
+                case 'ArrowLeft':
+                    golem.movingLeft = false;
+                    break;
+                    
+                case 'ArrowRight':
+                    golem.movingRight = false;
+                    break;
+            }
+        }
+        
+        function updateScore() {
+            scoreElement.textContent = `Score: ${score}`;
+            
+            // Check for level up based on score
+            const newLevel = Math.floor(score / 500) + 1;
+            if (newLevel > level) {
+                level = newLevel;
+                levelElement.textContent = `Level: ${level}`;
+                
+                // Increase difficulty
+                obstacleSpeed = Math.min(obstacleSpeed + 0.5, 8);
+                obstacleSpawnRate = Math.max(obstacleSpawnRate - 100, 300);
+                
+                // Update spawn interval
+                clearInterval(spawnInterval);
+                spawnInterval = setInterval(spawnObstacle, obstacleSpawnRate);
+                
+                // Show level up animation
+                showLevelUp();
+            }
+            
+            // Check if target score reached
+            if (score >= pointsTarget && gameActive) {
+                // Auto advance to next round when target is reached during gameplay
+                advanceToNextRound();
+            }
+        }
+        
+        function init() {
+            // Create golem
+            golem = new Golem();
+            
+            // Reset game variables
+            obstacles = [];
+            score = 0;
+            level = 1;
+            combo = 0;
+            comboTimer = 0;
+            round = 1;
+            currentTurn = 1;
+            roundOver = false;
+            
+            // Set initial difficulty
+            pointsTarget = POINTS_TARGET_INITIAL;
+            obstacleSpeed = OBSTACLE_SPEED_INITIAL;
+            obstacleSpawnRate = OBSTACLE_SPAWN_RATE_INITIAL;
+            gameTime = GAME_DURATION_INITIAL;
+            
+            // Reset other variables
+            explosions = [];
+            scorePopups = [];
+            isSlowMotion = false;
+            slowMotionTimer = 0;
+            
+            // Reset UI
+            scoreElement.textContent = `Score: ${score}`;
+            levelElement.textContent = `Level: ${level}`;
+            timerElement.textContent = `Time: ${gameTime}`;
+            updatePointsTarget();
+            
+            // Update health bar
+            updateHealthBar();
+            
+            // Update turn indicators
+            updateTurnIndicators();
+            
+            // Create grass
+            initGrass();
+            
+            // Add event listeners
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+        }
+        
+        function startGame() {
+            gameActive = true;
+            
+            // Hide start screen
+            startScreen.style.display = 'none';
+            
+            // Start obstacle spawning
+            spawnInterval = setInterval(spawnObstacle, obstacleSpawnRate);
+            
+            // Start game loop
+            lastFrameTime = performance.now();
+            requestAnimationFrame(gameLoop);
+            
+            // Start game timer
+            timerInterval = setInterval(() => {
+                if (gameTime > 0 && gameActive) {
+                    gameTime--;
+                    timerElement.textContent = `Time: ${gameTime}`;
+                    
+                    if (gameTime === 0) {
+                        endTurn();
+                    }
+                }
+            }, 1000);
+        }
+        
+        function endGame() {
+            gameActive = false;
+            roundOver = true;
+            
+            // Clear intervals
+            clearInterval(spawnInterval);
+            clearInterval(timerInterval);
+            
+            // Remove event listeners
+            document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('keyup', handleKeyUp);
+            
+            // Show game over screen
+            finalScoreElement.textContent = score;
+            finalLevelElement.textContent = level;
+            finalTurnsElement.textContent = currentTurn;
+            document.getElementById('final-round').textContent = round;
+            gameOverScreen.style.display = 'flex';
+        } === 0) {
+                        endGame();
+                    }
+                }
+            }, 1000);
+        }
+        
+        function endGame() {
+            gameActive = false;
+            roundOver = true;
+            
+            // Clear intervals
+            clearInterval(spawnInterval);
+            clearInterval(timerInterval);
+            
+            // Remove event listeners
+            document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('keyup', handleKeyUp);
+            
+            // Show game over screen
+            finalScoreElement.textContent = score;
+            finalLevelElement.textContent = level;
+            finalTurnsElement.textContent = currentTurn;
+            gameOverScreen.style.display = 'flex';
+        }
+        
+        function gameLoop(timestamp) {
+            if (!gameActive) return;
+            
+            // Calculate delta time
+            const deltaTime = (timestamp - lastFrameTime) / (1000 / 60);
+            lastFrameTime = timestamp;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            drawBackground();
+            
+            // Update and draw golem
+            golem.update();
+            golem.draw();
+            
+            // Update and draw obstacles
+            obstacles = obstacles.filter(obstacle => {
+                obstacle.update(deltaTime);
+                obstacle.draw();
+                return !obstacle.destroyed;
+            });
+            
+            // Update and draw score popups
+            scorePopups = scorePopups.filter(popup => {
+                const active = popup.update();
+                popup.draw();
+                return active;
+            });
+            
+            // Update and draw explosions
+            explosions = explosions.filter(explosion => {
+                const active = explosion.update();
+                explosion.draw();
+                return active;
+            });
+            
+            // Update combo timer
+            if (combo > 0 && comboTimer > 0) {
+                comboTimer--;
+                if (comboTimer === 0) {
+                    combo = 0;
+                    updateComboDisplay();
+                }
+            }
+            
+            // Update slow motion
+            if (isSlowMotion) {
+                slowMotionTimer--;
+                if (slowMotionTimer <= 0) {
+                    isSlowMotion = false;
+                }
+            }
+            
+            // Request next frame if game still active
+            if (gameActive && !roundOver) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        
+        // Event listeners
+        startButton.addEventListener('click', () => {
+            init();
+            startGame();
+        });
+        
+        restartButton.addEventListener('click', () => {
+            gameOverScreen.style.display = 'none';
+            init();
+            startGame();
+        });
+        
+        // Initial setup
+        init();
+    </script>
+</body>
+</html>
